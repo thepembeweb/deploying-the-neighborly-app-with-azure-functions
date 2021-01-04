@@ -1,0 +1,126 @@
+data:
+  FUNCTIONS_WORKER_RUNTIME: cHl0aG9u
+  AzureWebJobsStorage: VXNlRGV2ZWxvcG1lbnRTdG9yYWdlPXRydWU=
+apiVersion: v1
+kind: Secret
+metadata:
+  name: neighborlydevcluster
+  namespace: default
+---
+data:
+  host.master: aVp0WE9yRmVlY0JhSFVURUNGVkxYME00cXFFRW9JQTRoSUh5TjExOE00MlphME92NVdBMkRRPT0=
+  host.function.default: aE02NHpROGZ4RUNpZGcvZU82Y0QwWi85ME4xNm5FaU5SZ0pxb3ZweG5iWEtndWRHN3ZaRVJ3PT0=
+  host.systemKey.default: MWJ1VzljeUl1MElFclN1dGRjVER4S282NWF1SzhnaGRwcHc5STA2WWZLeGVOYjg0Nzl0QkZRPT0=
+  functions.createadvertisement.default: U1UxdTZpYVRUZEdXbkRFb1FoU296S3hFeUE5WUc4S3UyMndPR3RHZUlZUEVaTWUxRUNjMHJnPT0=
+  functions.deleteadvertisement.default: ZWZLTFdhWUtqa25LdGhWcUkwQnBLMi9RRkNFeUVoMm5YMW1NcjNrNkZDMkI2NDVpSTFjQnZnPT0=
+  functions.getadvertisement.default: c0FNeDNFSi95YjV2dWVpQmJiWGFKUWNDYmxjYTRiRmZldmJ1TlR4UFgzQ05ibjdCVUhoazNnPT0=
+  functions.getadvertisements.default: V0MveFh4ekRrYmRESGNaRzd3VmpZZFBLc1hXdDlwSFBxWXU4TkJ5dzRxaTdBWXM0bjZNdmxnPT0=
+  functions.getpost.default: alRGNUJkV0IvbDBwMXpJNjc5bnpsYWFQMFlhR0RKOTZBZTJocmtSTThsN0VhTURMR0I1ZFhBPT0=
+  functions.getposts.default: UVN5dklmaHNOSk41Mzk3Y0ZvajdTMkM0UTNLanZhTGNPWGxYMmxUL1lYUUxNR0N3by9GYnB3PT0=
+  functions.updateadvertisement.default: Y2VSU0czZURRdktZUDRLVzBxQi9OL3Fud2JoaDRLMDY3U3lzMFRkY09LZ3ROR1ZUSzVPSXZBPT0=
+apiVersion: v1
+kind: Secret
+metadata:
+  name: func-keys-kube-secret-neighborlydevcluster
+  namespace: default
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: neighborlydevcluster-function-keys-identity-svc-act
+  namespace: default
+---
+rules:
+- apiGroups:
+  - ''
+  resources:
+  - secrets
+  - configMaps
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: functions-keys-manager-role
+  namespace: default
+---
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: functions-keys-manager-role
+subjects:
+- kind: ServiceAccount
+  name: neighborlydevcluster-function-keys-identity-svc-act
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: neighborlydevcluster-function-keys-identity-svc-act-functions-keys-manager-rolebinding
+  namespace: default
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: neighborlydevcluster-http
+  namespace: default
+spec:
+  selector:
+    app: neighborlydevcluster-http
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: LoadBalancer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: neighborlydevcluster-http
+  namespace: default
+  labels:
+    app: neighborlydevcluster-http
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: neighborlydevcluster-http
+  template:
+    metadata:
+      labels:
+        app: neighborlydevcluster-http
+    spec:
+      containers:
+      - name: neighborlydevcluster-http
+        image: neighborlydev.azurecr.io/neighborly-api
+        ports:
+        - containerPort: 80
+        env:
+        - name: AzureFunctionsJobHost__functions__0
+          value: createAdvertisement
+        - name: AzureFunctionsJobHost__functions__1
+          value: deleteAdvertisement
+        - name: AzureFunctionsJobHost__functions__2
+          value: getAdvertisement
+        - name: AzureFunctionsJobHost__functions__3
+          value: getAdvertisements
+        - name: AzureFunctionsJobHost__functions__4
+          value: getPost
+        - name: AzureFunctionsJobHost__functions__5
+          value: getPosts
+        - name: AzureFunctionsJobHost__functions__6
+          value: updateAdvertisement
+        - name: AzureWebJobsSecretStorageType
+          value: kubernetes
+        - name: AzureWebJobsKubernetesSecretName
+          value: secrets/func-keys-kube-secret-neighborlydevcluster
+        envFrom:
+        - secretRef:
+            name: neighborlydevcluster
+      serviceAccountName: neighborlydevcluster-function-keys-identity-svc-act
+---
+

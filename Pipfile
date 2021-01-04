@@ -1,0 +1,19 @@
+[[source]]
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+requests = "*"
+flask-restplus = "*"
+flask-swagger-ui = "*"
+azure-functions = "*"
+azure-cosmos = "*"
+pymongo = "*"
+azure-cli-core = "*"
+feedgen = "*"
+Flask = "*"
+Flask-Bootstrap = "*"
+Werkzeug = "===0.16.1"
+
+[dev-packages]
